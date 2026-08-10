@@ -68,6 +68,7 @@ function BrandMark() {
 
 function App() {
   const root = useRef(null)
+  const heroVideo = useRef(null)
   const dreamVideo = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activePhoto, setActivePhoto] = useState(null)
@@ -111,21 +112,17 @@ function App() {
         })
 
         gsap.utils.toArray('.media-reveal').forEach((element) => {
-          gsap.fromTo(
-            element,
-            { scale: 0.9, opacity: 0.35 },
-            {
-              scale: 1,
-              opacity: 1,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: element,
-                start: 'top 92%',
-                end: 'center 58%',
-                scrub: 0.8,
-              },
+          gsap.from(element, {
+            y: 32,
+            opacity: 0,
+            duration: 0.85,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: element,
+              start: 'top 90%',
+              once: true,
             },
-          )
+          })
         })
 
         gsap.utils.toArray('.scroll-reveal').forEach((element) => {
@@ -142,21 +139,6 @@ function App() {
           })
         })
 
-        const cards = gsap.utils.toArray('.trait-card')
-        cards.forEach((card, index) => {
-          if (index === cards.length - 1) return
-          gsap.to(card, {
-            scale: 0.94,
-            opacity: 0.42,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: cards[index + 1],
-              start: 'top 76%',
-              end: 'top 18%',
-              scrub: true,
-            },
-          })
-        })
       })
     }, root)
 
@@ -174,6 +156,22 @@ function App() {
   }, [activePhoto, menuOpen])
 
   useEffect(() => {
+    const video = heroVideo.current
+    if (!video || !heroVideoReady) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {})
+        else video.pause()
+      },
+      { threshold: 0.05 },
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [heroVideoReady])
+
+  useEffect(() => {
     const video = dreamVideo.current
     if (!video) return undefined
 
@@ -185,11 +183,23 @@ function App() {
           video.pause()
         }
       },
-      { rootMargin: '400px 0px' },
+      { rootMargin: '150px 0px' },
     )
 
     observer.observe(video)
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const pauseHiddenVideos = () => {
+      if (document.hidden) {
+        heroVideo.current?.pause()
+        dreamVideo.current?.pause()
+      }
+    }
+
+    document.addEventListener('visibilitychange', pauseHiddenVideos)
+    return () => document.removeEventListener('visibilitychange', pauseHiddenVideos)
   }, [])
 
   const navigate = () => setMenuOpen(false)
@@ -226,12 +236,17 @@ function App() {
 
       <section className="hero" aria-labelledby="hero-title">
         <video
+          ref={heroVideo}
           className="hero-video"
           autoPlay
           muted
           loop
           playsInline
           preload="auto"
+          onLoadedMetadata={(event) => {
+            event.currentTarget.muted = true
+            event.currentTarget.volume = 0
+          }}
           poster="/assets/eura-real-park.jpeg"
           aria-label="Eura the Maltipoo playing"
         >
@@ -316,6 +331,10 @@ function App() {
           loop
           playsInline
           preload="none"
+          onLoadedMetadata={(event) => {
+            event.currentTarget.muted = true
+            event.currentTarget.volume = 0
+          }}
           poster="/assets/eura-new-bed.jpeg"
           aria-label="Eura drifting through a soft little dream"
         >
