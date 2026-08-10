@@ -7,10 +7,6 @@ import {
   Play,
   X,
 } from '@phosphor-icons/react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const gallery = [
   { src: '/assets/eura-real-home.jpeg', title: 'Hug Time', position: 'center 42%', tone: 'brightness(.84) contrast(1.06) saturate(.88)' },
@@ -57,9 +53,9 @@ const traits = [
   },
 ]
 
-function BrandMark() {
+function BrandMark({ onClick }) {
   return (
-    <a className="brand" href="#top" aria-label="Back to Eura home">
+    <a className="brand" href="#top" aria-label="Back to Eura home" onClick={onClick}>
       <span className="brand-mark"><PawPrint size={18} weight="fill" /></span>
       <span>EURA</span>
     </a>
@@ -91,7 +87,10 @@ function App() {
 
   useEffect(() => {
     const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setActivePhoto(null)
+      if (event.key === 'Escape') {
+        setActivePhoto(null)
+        setMenuOpen(false)
+      }
     }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
@@ -99,53 +98,21 @@ function App() {
 
   useEffect(() => {
     if (!root.current) return undefined
-
-    const mediaQuery = gsap.matchMedia()
-    const context = gsap.context(() => {
-      mediaQuery.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('.hero-kicker, .hero-word, .hero-intro, .round-action', {
-          y: 48,
-          opacity: 0,
-          duration: 1.15,
-          stagger: 0.08,
-          ease: 'power3.out',
-        })
-
-        gsap.utils.toArray('.media-reveal').forEach((element) => {
-          gsap.from(element, {
-            y: 32,
-            opacity: 0,
-            duration: 0.85,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: element,
-              start: 'top 90%',
-              once: true,
-            },
-          })
-        })
-
-        gsap.utils.toArray('.scroll-reveal').forEach((element) => {
-          gsap.from(element, {
-            y: 52,
-            opacity: 0,
-            duration: 1.15,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: element,
-              start: 'top 88%',
-              once: true,
-            },
-          })
-        })
-
+    const elements = root.current.querySelectorAll('.media-reveal, .scroll-reveal')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        observer.unobserve(entry.target)
       })
-    }, root)
+    }, { rootMargin: '0px 0px -10% 0px' })
 
-    return () => {
-      mediaQuery.revert()
-      context.revert()
-    }
+    elements.forEach((element) => {
+      element.classList.add('reveal-ready')
+      observer.observe(element)
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -222,7 +189,7 @@ function App() {
       {menuOpen && (
         <div className="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
           <div className="mobile-menu-top">
-            <BrandMark />
+            <BrandMark onClick={() => setMenuOpen(false)} />
             <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close navigation"><X size={24} /></button>
           </div>
           <nav>
@@ -238,11 +205,10 @@ function App() {
         <video
           ref={heroVideo}
           className="hero-video"
-          autoPlay
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           onLoadedMetadata={(event) => {
             event.currentTarget.muted = true
             event.currentTarget.volume = 0
