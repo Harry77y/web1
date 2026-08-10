@@ -198,8 +198,7 @@ function App() {
           poster="/assets/eura-real-park.jpeg"
           aria-label="Eura the Maltipoo playing"
         >
-          <source src="/assets/eura-hero-real.m4v" type="video/x-m4v" />
-          <source src="/assets/eura-original.mov" type="video/quicktime" />
+          <source src="/assets/eura-hero.mp4" type="video/mp4" />
         </video>
         <div className="hero-wash" />
         <div className="hero-copy page-shell">
@@ -283,7 +282,6 @@ function App() {
           aria-label="Eura drifting through a soft little dream"
         >
           <source src="/assets/eura-dream.mp4" type="video/mp4" />
-          <source src="/assets/eura-dream-original.mov" type="video/quicktime" />
         </video>
         <div className="dream-wash" />
         <div className="dream-copy page-shell scroll-reveal">
