@@ -68,8 +68,25 @@ function BrandMark() {
 
 function App() {
   const root = useRef(null)
+  const dreamVideo = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activePhoto, setActivePhoto] = useState(null)
+  const [heroVideoReady, setHeroVideoReady] = useState(false)
+
+  useEffect(() => {
+    let timer
+    const queueVideo = () => {
+      timer = window.setTimeout(() => setHeroVideoReady(true), 500)
+    }
+
+    if (document.readyState === 'complete') queueVideo()
+    else window.addEventListener('load', queueVideo, { once: true })
+
+    return () => {
+      window.removeEventListener('load', queueVideo)
+      window.clearTimeout(timer)
+    }
+  }, [])
 
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -156,6 +173,25 @@ function App() {
     }
   }, [activePhoto, menuOpen])
 
+  useEffect(() => {
+    const video = dreamVideo.current
+    if (!video) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {})
+        } else {
+          video.pause()
+        }
+      },
+      { rootMargin: '400px 0px' },
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
+
   const navigate = () => setMenuOpen(false)
 
   return (
@@ -195,10 +231,11 @@ function App() {
           muted
           loop
           playsInline
+          preload="auto"
           poster="/assets/eura-real-park.jpeg"
           aria-label="Eura the Maltipoo playing"
         >
-          <source src="/assets/eura-hero.mp4" type="video/mp4" />
+          {heroVideoReady && <source src="/assets/eura-hero.mp4" type="video/mp4" />}
         </video>
         <div className="hero-wash" />
         <div className="hero-copy page-shell">
@@ -224,7 +261,7 @@ function App() {
 
         <div className="profile-layout">
           <figure className="profile-portrait media-reveal">
-            <img src="/assets/eura-real-profile.jpeg" alt="Front portrait of Eura the Maltipoo" />
+            <img src="/assets/eura-real-profile.jpeg" alt="Front portrait of Eura the Maltipoo" loading="lazy" decoding="async" />
           </figure>
 
           <div className="profile-details scroll-reveal">
@@ -263,7 +300,7 @@ function App() {
               onClick={() => setActivePhoto(index)}
               aria-label={`View full image: ${photo.title}`}
             >
-              <img src={photo.src} alt={photo.title} style={{ objectPosition: photo.position, filter: photo.tone }} />
+              <img src={photo.src} alt={photo.title} loading="lazy" decoding="async" style={{ objectPosition: photo.position, filter: photo.tone }} />
               <span>{photo.title}</span>
               <ArrowUpRight size={24} />
             </button>
@@ -273,11 +310,12 @@ function App() {
 
       <section className="dream-break" aria-labelledby="dream-title">
         <video
+          ref={dreamVideo}
           className="dream-video"
-          autoPlay
           muted
           loop
           playsInline
+          preload="none"
           poster="/assets/eura-new-bed.jpeg"
           aria-label="Eura drifting through a soft little dream"
         >
@@ -307,7 +345,7 @@ function App() {
                 <p>{trait.text}</p>
               </div>
               <div className="trait-image">
-                <img src={trait.image} alt={`Eura ${trait.title}`} style={{ objectPosition: trait.position, filter: trait.tone }} />
+                <img src={trait.image} alt={`Eura ${trait.title}`} loading="lazy" decoding="async" style={{ objectPosition: trait.position, filter: trait.tone }} />
               </div>
             </article>
           ))}
@@ -315,7 +353,7 @@ function App() {
       </section>
 
       <footer className="contact" id="contact" aria-labelledby="contact-title">
-        <img className="contact-bg" src="/assets/eura-new-curious.jpeg" alt="Eura enjoying a gentle little moment with her person" />
+        <img className="contact-bg" src="/assets/eura-new-curious.jpeg" alt="Eura enjoying a gentle little moment with her person" loading="lazy" decoding="async" />
         <div className="contact-wash" />
         <div className="contact-content page-shell scroll-reveal">
           <p className="contact-kicker">FOLLOW EURA</p>
@@ -336,7 +374,7 @@ function App() {
         <div className="lightbox" role="dialog" aria-modal="true" aria-label={gallery[activePhoto].title} onClick={() => setActivePhoto(null)}>
           <button type="button" onClick={() => setActivePhoto(null)} aria-label="Close full image"><X size={28} /></button>
           <figure onClick={(event) => event.stopPropagation()}>
-            <img src={gallery[activePhoto].src} alt={gallery[activePhoto].title} />
+            <img src={gallery[activePhoto].src} alt={gallery[activePhoto].title} decoding="async" />
             <figcaption>
               <span>{gallery[activePhoto].title}</span>
               <span>{String(activePhoto + 1).padStart(2, '0')} / {String(gallery.length).padStart(2, '0')}</span>
