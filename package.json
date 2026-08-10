@@ -1,0 +1,21 @@
+{
+  "name": "eura-pet-brand",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@fontsource/outfit": "^5.2.8",
+    "@phosphor-icons/react": "^2.1.10",
+    "@vitejs/plugin-react": "^5.0.4",
+    "gsap": "^3.13.0",
+    "vite": "^7.1.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {}
+}
